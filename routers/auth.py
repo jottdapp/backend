@@ -18,9 +18,9 @@ class SignupData(BaseModel):
     password: str
 
 
-def login_info(session):
-    data = sessions.get(session)
-    return data["username"]
+class LoginData(BaseModel):
+    username: str
+    password: str
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -41,11 +41,6 @@ async def signup(data: SignupData):
 
     users.put({"password": get_password_hash(data.password)}, data.username)
     return {"success": True}
-
-
-class LoginData(BaseModel):
-    username: str
-    password: str
 
 
 @router.post("/login")
