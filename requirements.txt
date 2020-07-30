@@ -1,3 +1,4 @@
 fastapi
 deta
 passlib[bcrypt]
+python-jose[cryptography]
