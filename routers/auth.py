@@ -34,7 +34,9 @@ async def signup(data: SignupData):
             status_code=400, content={"detail": "Username already in use."}
         )
 
-    users.put({"password": get_password_hash(data.password)}, data.username)
+    users.put(
+        {"password": get_password_hash(data.password), "stores": []}, data.username
+    )
 
     # same logic as login, make a session
     session_cookie = User(data.username).create_access_token(timedelta(days=30))
