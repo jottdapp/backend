@@ -35,7 +35,7 @@ async def signup(data: SignupData):
         )
 
     users.put(
-        {"password": get_password_hash(data.password), "stores": []}, data.username
+        {"password": get_password_hash(data.password), "stores": {}}, data.username,
     )
 
     # same logic as login, make a session
