@@ -23,16 +23,16 @@ def list_notes(store_uuid: str, user=Depends(get_active_user_required)):
             content={"detail": "User does not have access to this store."},
         )
 
-    return [] if store["items"] is None else store["items"]
+    return {} if store["items"] is None else store["items"]
 
 
-class NoteData(BaseModel):
+class NewNoteData(BaseModel):
     store_uuid: str
     note: Dict
 
 
 @router.post("/new")
-def new_note(note_data: NoteData, user=Depends(get_active_user_required)):
+def new_note(note_data: NewNoteData, user=Depends(get_active_user_required)):
     store = stores.get(note_data.store_uuid)
     if store is None:
         return JSONResponse(
@@ -47,11 +47,42 @@ def new_note(note_data: NoteData, user=Depends(get_active_user_required)):
         )
 
     note_uuid = uuid4().hex
-    note_object = {"id": note_uuid, "note": note_data.note}
-
     if store["items"] is None:
-        stores.update({"items": [note_object]}, note_data.store_uuid)
+        stores.update({"items": {note_uuid: note_data.note}}, note_data.store_uuid)
     else:
-        stores.update({"items": stores.util.append(note_object)}, note_data.store_uuid)
+        stores.update(
+            {"items.{}".format(note_uuid): note_data.note}, note_data.store_uuid
+        )
 
     return note_uuid
+
+
+class EditNoteData(BaseModel):
+    store_uuid: str
+    note_uuid: str
+    note: Dict
+
+
+@router.post("/edit")
+def edit_note(note_data: EditNoteData, user=Depends(get_active_user_required)):
+    store = stores.get(note_data.store_uuid)
+    if store is None:
+        return JSONResponse(
+            status_code=400, content={"detail": "Store does not exist."},
+        )
+    if (user.username not in store["members"]) or (
+        store["members"][user.username]["permissions"] == "read"
+    ):
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "User does not have write access to this store."},
+        )
+
+    if note_data.note_uuid not in store["items"]:
+        return JSONResponse(
+            status_code=400, content={"detail": "Note does not exist."},
+        )
+
+    stores.update(
+        {"items.{}".format(note_data.note_uuid): note_data.note}, note_data.store_uuid
+    )

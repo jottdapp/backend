@@ -47,7 +47,7 @@ def new_store(store: StoreData, user=Depends(get_active_user_required)):
     stores.put(
         {
             "view": store.view,
-            "items": [],
+            "items": {},
             "members": {user.username: {"permissions": "owner"}},
         },
         key=store_uuid,
