@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from utilities.db import users, stores
-from utilities.auth import get_active_user_required, User
+from utilities.auth import get_active_user_required
 from pydantic import BaseModel
 from typing import Optional
 from uuid import uuid4
@@ -17,7 +17,11 @@ def list_stores(user=Depends(get_active_user_required)):
     """
 
     user_stores = users.get(user.username)["stores"]
-    return {} if user_stores is None else user_stores
+    returned_stores = {}
+    for store_shortcut, store_uuid in user_stores.items():
+        store_view = stores.get(store_uuid)["view"]
+        returned_stores[store_shortcut] = {"uuid": store_uuid, "view": store_view}
+    return returned_stores
 
 
 class StoreData(BaseModel):
@@ -31,7 +35,8 @@ def new_store(store: StoreData, user=Depends(get_active_user_required)):
     Creates a new store, returns the uuid representing it.
     """
 
-    user_stores = list_stores(user=user)
+    user_stores = users.get(user.username)["stores"]
+    user_stores = {} if user_stores is None else user_stores
     if store.shortcut in user_stores:
         return JSONResponse(
             status_code=400,
@@ -65,7 +70,8 @@ class EditStoreShortcutData(BaseModel):
 def edit_store_shortcut(
     store_data: EditStoreShortcutData, user=Depends(get_active_user_required)
 ):
-    user_stores = list_stores(user=user)
+    user_stores = users.get(user.username)["stores"]
+    user_stores = {} if user_stores is None else user_stores
 
     for existing_shortcut, existing_uuid in user_stores.items():
         if existing_uuid == store_data.store_uuid:
@@ -96,7 +102,8 @@ def _delete_store_user(store_data, username: str):
         stores.delete(store_data["key"])
 
     # remove store from user object
-    user_stores = list_stores(user=User(username))
+    user_stores = users.get(username)["stores"]
+    user_stores = {} if user_stores is None else user_stores
     for shortcut, store_uuid in user_stores.items():
         if store_uuid == store_data["key"]:
             del user_stores[shortcut]
