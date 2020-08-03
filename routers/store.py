@@ -56,6 +56,34 @@ def new_store(store: StoreData, user=Depends(get_active_user_required)):
     return store_uuid
 
 
+class EditStoreShortcutData(BaseModel):
+    store_uuid: str
+    shortcut: str
+
+
+@router.post("/edit-shortcut")
+def edit_store_shortcut(
+    store_data: EditStoreShortcutData, user=Depends(get_active_user_required)
+):
+    user_stores = list_stores(user=user)
+
+    for existing_shortcut, existing_uuid in user_stores.items():
+        if existing_uuid == store_data.store_uuid:
+            users.update(
+                {"stores.{}".format(existing_shortcut): users.util.trim()},
+                user.username,
+            )
+            users.update(
+                {"stores.{}".format(store_data.shortcut): store_data.store_uuid},
+                user.username,
+            )
+            break
+    else:
+        return JSONResponse(
+            status_code=400, content={"detail": "User does not have this store."},
+        )
+
+
 def _delete_store_user(store_data, username: str):
     # remove user from store members
     del store_data["members"][username]
