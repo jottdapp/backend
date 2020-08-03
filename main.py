@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import auth, store
+from routers import auth, store, note
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
@@ -15,3 +15,4 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(store.router, prefix="/api/store")
+app.include_router(note.router, prefix="/api/note")
