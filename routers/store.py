@@ -13,7 +13,7 @@ router = APIRouter()
 def list_stores(user=Depends(get_active_user_required)):
     """
     Returns a dictionary of all user stores, in the following format:
-    {store_shortcut: store_uuid, ...}
+    {store_shortcut: {"uuid": store_uuid, "view": store_view}, ...}
     """
 
     user_stores = users.get(user.username)["stores"]
@@ -70,6 +70,9 @@ class EditStoreShortcutData(BaseModel):
 def edit_store_shortcut(
     store_data: EditStoreShortcutData, user=Depends(get_active_user_required)
 ):
+    """
+    Edits the user shortcut for a store given by uuid.
+    """
     user_stores = users.get(user.username)["stores"]
     user_stores = {} if user_stores is None else user_stores
 
