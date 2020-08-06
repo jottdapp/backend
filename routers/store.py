@@ -17,6 +17,7 @@ def list_stores(user=Depends(get_active_user_required)):
     """
 
     user_stores = users.get(user.username)["stores"]
+    user_stores = {} if user_stores is None else user_stores
     returned_stores = {}
     for store_shortcut, store_uuid in user_stores.items():
         store_view = stores.get(store_uuid)["view"]
